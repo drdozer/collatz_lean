@@ -4,11 +4,6 @@ variable (n : Nat)
 variable (a b c : Nat)
 variable (i j k p : Nat)
 
-theorem mod21 {n: Nat} : n%2=1 → 0 < n := by
-    induction n
-    simp
-    simp
-        
 
 
 def is_even a := ∃ b, 2*b = a
@@ -36,10 +31,9 @@ theorem collatz_odd_to_even : is_odd n -> is_even (collatz n) := by
         obtain ⟨i, rfl⟩ := Nat.dvd_of_mod_eq_zero h
         simp
     case inr nh =>
-        simp
-        simp [Nat.mul_mod_left] at nh
-        exact mod21 nh
-        
+        simp at nh                      -- declutter nh
+        simp only [← Nat.odd_iff] at nh -- mod=1 as Odd
+        simp [Odd.pos nh]               -- Odd as 0<
 
 
 def collatz_conjecture_n n := n > 0 -> ∃ p, Nat.iterate collatz p n = 1
