@@ -67,7 +67,7 @@ def z1 := ColN.odd_of ColN.zero
 -- The z10 numeral is equivalent to 2.
 def z10 := ColN.even_of $ ColN.odd_of ColN.zero
 
- -- The z11 numeral is equivalent to 3.
+-- The z11 numeral is equivalent to 3.
 def z11 := ColN.odd_of $ ColN.odd_of ColN.zero
 
 /-!
@@ -153,7 +153,7 @@ instance {α : Type} [HAdd α α α]: HAdd α (LinEq α) (LinEq α) where
 
 @[simp, simps]
 instance : HAdd ℕ (LinEq ℚ) (LinEq ℚ) where
-  hAdd a b := (a : ℚ) + b
+  hAdd a b := (Rat.ofInt $ Int.ofNat a) + b
 
 @[simp, simps]
 instance {α : Type} [HDiv α α α]: HDiv (LinEq α) α (LinEq α) where
@@ -161,7 +161,7 @@ instance {α : Type} [HDiv α α α]: HDiv (LinEq α) α (LinEq α) where
 
 @[simp, simps]
 instance : HDiv (LinEq ℚ) ℕ (LinEq ℚ) where
-  hDiv a b := a / (b : ℚ)
+  hDiv a b := a / (Rat.ofInt $ Int.ofNat b)
 
 @[simp] def le_0 {α : Type} [Zero α] [One α] : LinEq α := (LinEq.mk 0 0)
 @[simp] def le_0_ℕ := @le_0 ℕ _ _
@@ -270,13 +270,25 @@ def ColS.eval {α : Type} [HMul ℕ α α] [HAdd ℕ α α] [HDiv α ℕ α](cs:
 #eval (ColS.step_down $ ColS.step_up $ ColS.zero).eval 1
 #eval (ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.zero).eval 1
 
-#eval (ColS.step_up $ ColS.zero).eval 3
-#eval (ColS.step_down $ ColS.step_up $ ColS.zero).eval 3
-#eval (ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval 3
-#eval (ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval 3
-#eval (ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval 3
-#eval (ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval 3
-#eval (ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval 3
+/-!
+This gets verbose quickly, so we will make some shorthand.
+-/
+
+def cs_u := ColS.step_up $ ColS.zero
+def cs_ud := ColS.step_down $ ColS.step_up $ ColS.zero
+def cs_udu := ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero
+def cs_udud := ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero
+def cs_ududd := ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero
+def cs_ududdd := ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero
+def cs_ududddd := ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero
+
+#eval cs_u.eval 3
+#eval cs_ud.eval 3
+#eval cs_udu.eval 3
+#eval cs_udud.eval 3
+#eval cs_ududd.eval 3
+#eval cs_ududdd.eval 3
+#eval cs_ududddd.eval 3
 
 @[simp] instance : HMul ℕ ℚ ℚ where
   hMul a b := (a : ℚ) * b 
@@ -312,42 +324,42 @@ def cn3 := z11.eval le_1_ℚ
 
 #eval ColS.zero.eval cn3
 
-#eval ((ColS.step_up $ ColS.zero).eval le_1_ℚ)
-#eval ((ColS.step_up $ ColS.zero).eval le_1_ℚ).eval 3
-#eval ((ColS.step_up $ ColS.zero).eval cn3)
+#eval (cs_u.eval le_1_ℚ)
+#eval (cs_u.eval le_1_ℚ).eval 3
+#eval (cs_u.eval cn3)
 
 
-#eval (ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ
-#eval (ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ
-#eval (ColS.step_down $ ColS.step_up $ ColS.zero).eval cn3
+#eval (cs_ud.eval le_1_ℚ)
+#eval (cs_ud.eval le_1_ℚ).eval 3
+#eval cs_ud.eval cn3
 
-#eval ((ColS.step_up $ ColS.zero).eval le_1_ℚ)
-#eval ((ColS.step_up $ ColS.zero).eval le_1_ℚ).eval 3
-#eval ((ColS.step_up $ ColS.zero).eval cn3)
+#eval (cs_u.eval le_1_ℚ)
+#eval (cs_u.eval le_1_ℚ).eval 3
+#eval (cs_u.eval cn3)
 
-#eval ((ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ)
-#eval ((ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ).eval 3
-#eval ((ColS.step_down $ ColS.step_up $ ColS.zero).eval cn3)
+#eval (cs_ud.eval le_1_ℚ)
+#eval (cs_ud.eval le_1_ℚ).eval 3
+#eval (cs_ud.eval cn3)
 
-#eval ((ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ)
-#eval ((ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ).eval 3
-#eval ((ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval cn3)
+#eval (cs_udu.eval le_1_ℚ)
+#eval (cs_udu.eval le_1_ℚ).eval 3
+#eval (cs_udu.eval cn3)
 
-#eval ((ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ)
-#eval ((ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ).eval 3
-#eval ((ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval cn3)
+#eval (cs_udud.eval le_1_ℚ)
+#eval (cs_udud.eval le_1_ℚ).eval 3
+#eval (cs_udud.eval cn3)
 
-#eval ((ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ)
-#eval ((ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ).eval 3
-#eval ((ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval cn3)
+#eval (cs_ududd.eval le_1_ℚ)
+#eval (cs_ududd.eval le_1_ℚ).eval 3
+#eval (cs_ududd.eval cn3)
 
-#eval ((ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ)
-#eval ((ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ).eval 3
-#eval ((ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval cn3)
+#eval (cs_ududdd.eval le_1_ℚ)
+#eval (cs_ududdd.eval le_1_ℚ).eval 3
+#eval (cs_ududdd.eval cn3)
 
-#eval ((ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ)
-#eval ((ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ).eval 3
-#eval ((ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval cn3)
+#eval (cs_ududddd.eval le_1_ℚ)
+#eval (cs_ududddd.eval le_1_ℚ).eval 3
+#eval (cs_ududddd.eval cn3)
 
 
 
@@ -369,6 +381,74 @@ def le_5 : LinEq ℚ := { m := (3 : Rat)/2, c := (1 : Rat)/2 }
 #eval le_5.eval 3
 
 /-!
-We can see that every even-numbered solutino is not a whole number.
-The reason for this is that we applied the `down` step at 10 
+We can see that every even-numbered solution is not a whole number.
+What this means is that the collatz function only reduces using the `down` step here when the `n`
+is odd.
+This is due to the way that you can't apply the `up` or `down` step of the collatz function for all `n`.
+The `up` step only works where `n` is odd, and the down step only works where `n` is even.
+
+As it happens, this is fine for `n` in the equation for 3, so the evaluation gives:
+`{ m := 6, c := 5 }`.
+So using `n` for 3, all the solutions at this point are whole numbers.
+
+If we move on through the calculation, we reach a step where `n` for 3 no longer always gives whole-number results.
+At `3 ↦ 10 ↦ 5 ↦ 16 ↦ 8 ↦ 4`, we reach the ColS equation:
+`{ m := (9 : Rat)/8, c := (5 : Rat)/8 }` and the corresponding equation for `n=3` of
+`{ m := (9 : Rat)/2, c := 4 }`
+-/
+
+def le_4 : LinEq ℚ := { m := (9 : Rat)/2, c := 4 }
+#eval le_4.eval 0
+#eval le_4.eval 1
+#eval le_4.eval 2
+#eval le_4.eval 3
+
+/-!
+Again, we see that this doesn't have a whole-number solution for all choices of `n`.
+This is because to reduce from 8 to 4, we need the `n` to be even.
+That is, it's only defined for `n=3, Even n`.
+We can represent this directly by rewriting the expression for tree from `z11` to `z011`.
+The leading zero is saying that `n` is guaranteed even.
+-/
+
+def z011 := ColN.odd_of $ ColN.odd_of $ ColN.even_of ColN.zero
+def cn03 := z011.eval le_1_ℚ
+/-!
+And just to check that z011 is another way to write 3, here it is.
+-/
+#eval z011.eval 0
+
+/-!
+If we plug this into the expression above, we now get:
+-/
+
+#eval (cs_ududd.eval cn03)
+#eval (cs_ududdd.eval cn03)
+#eval (cs_ududddd.eval cn03)
+
+/-!
+Again, we see that while it fixes the problem with the 4 case, we now have issues at the 2 and 1 cases.
+More leading evens (zeros) will fix that though.
+-/
+
+def z0011 := ColN.odd_of $ z011
+def cn003 := z0011.eval le_1_ℚ
+
+#eval (cs_ududd.eval cn003)
+#eval (cs_ududdd.eval cn003)
+#eval (cs_ududddd.eval cn003)
+
+
+def z00011 := ColN.odd_of $ z0011
+def cn0003 := z00011.eval le_1_ℚ
+
+#eval (cs_ududd.eval cn0003)
+#eval (cs_ududdd.eval cn0003)
+#eval (cs_ududddd.eval cn0003)
+
+/-!
+And we're done.
+
+So, the collatz numeral `z00011` gives us an equation for all valid collatz chains where the smallest
+example is the chain from 3 to 1.
 -/
