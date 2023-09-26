@@ -45,8 +45,8 @@ However, the outermost constructor is the least significant, making the zero the
 So we have, in effect, got a backwards binary numeral.
 
 Where this differs from binary is that we can substitute the `zero` terminal with any `n₀`,
-making the evaluation of these numerals equivalent to computing a linear function of `n₀`,
-equal to the corresponding binary numeral when `n₀=0`.
+making the evaluation of these numerals equivalent to computing a linear function of `n₀`.
+This evaluates to the corresponding binary numeral when `n₀=0`.
 -/
 
 /--!
@@ -58,13 +58,17 @@ inductive ColN where
     | odd_of    : ColN → ColN   -- the odd number that is one more than twice the previous
 deriving Repr
 
-instance : Zero ColN where zero := ColN.zero
-instance : One ColN where one := ColN.odd_of 0
+-- The z0 numeral is equivalent to 0.
+def z0 := ColN.zero
 
-/-!
-The z10 numeral is equivalent to 2.
--/
+-- The z1 numeral is equvalent to 1.
+def z1 := ColN.odd_of ColN.zero
+
+-- The z10 numeral is equivalent to 2.
 def z10 := ColN.even_of $ ColN.odd_of ColN.zero
+
+ -- The z11 numeral is equivalent to 3.
+def z11 := ColN.odd_of $ ColN.odd_of ColN.zero
 
 /-!
 The evaluation of a collatz numeral is straightforward from its defnition.
@@ -76,8 +80,7 @@ The `even_of` constructor doubles what follows, and the `odd_of` constructor dou
 Evaluate a ColN, as an equation.
 
 Evaluation at 0 recovers the natural number equivalent to the binary representation.
--/ 
-
+-/
 @[simp]
 def ColN.eval {α : Type} [HMul ℕ α α] [HAdd ℕ α α] (cn: ColN) (n : α) : α := match cn with
 | ColN.zero => n
@@ -88,16 +91,21 @@ def ColN.eval {α : Type} [HMul ℕ α α] [HAdd ℕ α α] (cn: ColN) (n : α) 
 It behaves as expected:
 -/
 
-#eval ColN.eval 0 1
-#eval ColN.eval 0 2
+#eval z0.eval 0
+#eval z0.eval 1
+#eval z0.eval 2
 
-#eval ColN.eval 1 0
-#eval ColN.eval 1 1
-#eval ColN.eval 1 2
+#eval z1.eval 0
+#eval z1.eval 1
+#eval z1.eval 2
 
 #eval z10.eval 0
 #eval z10.eval 1
 #eval z10.eval 2
+
+#eval z11.eval 0
+#eval z11.eval 1
+#eval z11.eval 2
 
 /-!
 Yikes! The partially applied form is horrific.
@@ -125,13 +133,19 @@ structure LinEq (α : Type) :=
   (c : α)
 deriving Repr
 
+/--!
+We can manipulate `LinEq` values directly, but it would be far more convenient if we could apply
+scalar addition, multiplication and division to them with the normal syntax.
+This is supported by providing instances of the `HAdd`, `HMul` and `HDiv` classes.
+-/
+
 @[simp, simps]
 instance {α : Type} [HMul α α α]: HMul α (LinEq α) (LinEq α) where
   hMul a b := ⟨a * b.m, a * b.c⟩
 
 @[simp, simps]
 instance : HMul ℕ (LinEq ℚ) (LinEq ℚ) where
-  hMul a b := (a : ℚ) * b
+  hMul a b := (Rat.ofInt $ Int.ofNat a) * b
 
 @[simp, simps]
 instance {α : Type} [HAdd α α α]: HAdd α (LinEq α) (LinEq α) where
@@ -149,16 +163,16 @@ instance {α : Type} [HDiv α α α]: HDiv (LinEq α) α (LinEq α) where
 instance : HDiv (LinEq ℚ) ℕ (LinEq ℚ) where
   hDiv a b := a / (b : ℚ)
 
-@[simp] def n_0 {α : Type} [Zero α] [One α] : LinEq α := (LinEq.mk 0 0)
-@[simp] def n_0_ℕ := @n_0 ℕ _ _
-@[simp] def n_0_ℚ := @n_0 ℚ _ _
+@[simp] def le_0 {α : Type} [Zero α] [One α] : LinEq α := (LinEq.mk 0 0)
+@[simp] def le_0_ℕ := @le_0 ℕ _ _
+@[simp] def le_0_ℚ := @le_0 ℚ _ _
 
 
-@[simp] def n_1 {α : Type} [Zero α] [One α] : LinEq α := (LinEq.mk 1 0)
-@[simp] def n_1_ℕ := @n_1 ℕ _ _
-@[simp] def n_1_ℚ := @n_1 ℚ _ _
+@[simp] def le_1 {α : Type} [Zero α] [One α] : LinEq α := (LinEq.mk 1 0)
+@[simp] def le_1_ℕ := @le_1 ℕ _ _
+@[simp] def le_1_ℚ := @le_1 ℚ _ _
 
-#eval z10.eval n_1_ℕ
+#eval z10.eval le_1_ℕ
 
 example (n : LinEq ℕ): z10.eval n = (2 + 4*n) := by
   simp
@@ -170,18 +184,22 @@ example (n : LinEq ℕ): z10.eval n = (2 + 4*n) := by
 def LinEq.eval {α} [Semiring α] (le : LinEq α) (n : α) : α := le.m * n + le.c
 
 /-! It appears to work, as seen here: -/
-#eval (0 : ColN).eval n_1_ℕ 
-#eval ((0 : ColN).eval n_1_ℕ).eval 0
-#eval ((0 : ColN).eval n_1_ℕ).eval 1
-#eval ((0 : ColN).eval n_1_ℕ).eval 2
-#eval (1 : ColN).eval n_1_ℕ
-#eval ((1 : ColN).eval n_1_ℕ).eval 0
-#eval ((1 : ColN).eval n_1_ℕ).eval 1
-#eval ((1 : ColN).eval n_1_ℕ).eval 2
-#eval z10.eval n_1_ℕ 
-#eval (z10.eval n_1_ℕ).eval 0
-#eval (z10.eval n_1_ℕ).eval 1
-#eval (z10.eval n_1_ℕ).eval 2
+#eval z0.eval le_1_ℕ 
+#eval (z0.eval le_1_ℕ).eval 0
+#eval (z0.eval le_1_ℕ).eval 1
+#eval (z0.eval le_1_ℕ).eval 2
+#eval z1.eval le_1_ℕ
+#eval (z1.eval le_1_ℕ).eval 0
+#eval (z1.eval le_1_ℕ).eval 1
+#eval (z1.eval le_1_ℕ).eval 2
+#eval z10.eval le_1_ℕ 
+#eval (z10.eval le_1_ℕ).eval 0
+#eval (z10.eval le_1_ℕ).eval 1
+#eval (z10.eval le_1_ℕ).eval 2
+#eval z11.eval le_1_ℕ 
+#eval (z11.eval le_1_ℕ).eval 0
+#eval (z11.eval le_1_ℕ).eval 1
+#eval (z11.eval le_1_ℕ).eval 2
 
 /-!
 Obviously, it should be true that `ColN.eval` applied to a natural number is equal to `ColN.eval`
@@ -189,7 +207,7 @@ applied to the unit linear equation at this same natural number.
 
 Best check though.
 -/
-theorem eval_nat_eq_eval_lineq1 (n : ℕ) (cn : ColN): ColN.eval cn n = (cn.eval n_1_ℕ).eval n := by
+theorem eval_nat_eq_eval_lineq1 (n : ℕ) (cn : ColN): ColN.eval cn n = (cn.eval le_1_ℕ).eval n := by
     induction cn with
     | zero =>
         simp
@@ -271,65 +289,64 @@ def ColS.eval {α : Type} [HMul ℕ α α] [HAdd ℕ α α] [HDiv α ℕ α](cs:
 Again, we would like to be confident that the two ways of evaluating a ColS numeral are equivalent.
 So let's check that.
 -/
-theorem cols_eval_eq_to_lf_eval (cs : ColS) (n : ℚ): cs.eval n = (cs.eval n_1_ℚ).eval n := by
+theorem cols_eval_eq_to_lf_eval (cs : ColS) (n : ℚ): cs.eval n = (cs.eval le_1_ℚ).eval n := by
   induction cs with
   | zero =>
-    simp only [ColS.eval, LinEq.eval, n_1_ℚ, n_1, one_mul, add_zero]
+    simp
   | step_up ds h =>
-    simp only [ColS.eval, instHAddNatRat, instHMulNatRat, instHDivRatNat, h, LinEq.eval, instHMulNatLinEqRat,
-      instHMulLinEq, instHAddNatLinEqRat, instHAddLinEq, instHDivLinEqRatNat, instHDivLinEq, n_1_ℚ, n_1, Nat.cast_ofNat,
-      Nat.cast_one, instHMulNatLinEqRat_hMul, instHAddNatLinEqRat_hAdd]
+    simp [h]
     ring
   | step_down ds h =>
-    simp only [ColS.eval, h, LinEq.eval, instHMulLinEq, instHAddLinEq, n_1_ℕ, n_1]
+    simp [h]
     field_simp
 
 /-!
 And now we can look at some examples of what collatz sequence numerals look like in practice.
 -/
 
-def cn3 := (ColN.odd_of $ ColN.odd_of ColN.zero).eval n_1_ℚ
+-- The linear equation in ℚ for z11 (=3).
+def cn3 := z11.eval le_1_ℚ
 
-#eval ColS.zero.eval n_1_ℚ 
+#eval ColS.zero.eval le_1_ℚ 
 #eval ColS.zero.eval 1
 
 #eval ColS.zero.eval cn3
 
-#eval ((ColS.step_up $ ColS.zero).eval n_1_ℚ)
-#eval ((ColS.step_up $ ColS.zero).eval n_1_ℚ).eval 3
+#eval ((ColS.step_up $ ColS.zero).eval le_1_ℚ)
+#eval ((ColS.step_up $ ColS.zero).eval le_1_ℚ).eval 3
 #eval ((ColS.step_up $ ColS.zero).eval cn3)
 
 
-#eval (ColS.step_down $ ColS.step_up $ ColS.zero).eval n_1_ℚ
-#eval (ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.zero).eval n_1_ℚ
+#eval (ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ
+#eval (ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ
 #eval (ColS.step_down $ ColS.step_up $ ColS.zero).eval cn3
 
-#eval ((ColS.step_up $ ColS.zero).eval n_1_ℚ)
-#eval ((ColS.step_up $ ColS.zero).eval n_1_ℚ).eval 3
+#eval ((ColS.step_up $ ColS.zero).eval le_1_ℚ)
+#eval ((ColS.step_up $ ColS.zero).eval le_1_ℚ).eval 3
 #eval ((ColS.step_up $ ColS.zero).eval cn3)
 
-#eval ((ColS.step_down $ ColS.step_up $ ColS.zero).eval n_1_ℚ)
-#eval ((ColS.step_down $ ColS.step_up $ ColS.zero).eval n_1_ℚ).eval 3
+#eval ((ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ)
+#eval ((ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ).eval 3
 #eval ((ColS.step_down $ ColS.step_up $ ColS.zero).eval cn3)
 
-#eval ((ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval n_1_ℚ)
-#eval ((ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval n_1_ℚ).eval 3
+#eval ((ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ)
+#eval ((ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ).eval 3
 #eval ((ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval cn3)
 
-#eval ((ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval n_1_ℚ)
-#eval ((ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval n_1_ℚ).eval 3
+#eval ((ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ)
+#eval ((ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ).eval 3
 #eval ((ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval cn3)
 
-#eval ((ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval n_1_ℚ)
-#eval ((ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval n_1_ℚ).eval 3
+#eval ((ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ)
+#eval ((ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ).eval 3
 #eval ((ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval cn3)
 
-#eval ((ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval n_1_ℚ)
-#eval ((ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval n_1_ℚ).eval 3
+#eval ((ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ)
+#eval ((ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ).eval 3
 #eval ((ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval cn3)
 
-#eval ((ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval n_1_ℚ)
-#eval ((ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval n_1_ℚ).eval 3
+#eval ((ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ)
+#eval ((ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval le_1_ℚ).eval 3
 #eval ((ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_down $ ColS.step_up $ ColS.step_down $ ColS.step_up $ ColS.zero).eval cn3)
 
 
@@ -339,5 +356,19 @@ Where as ColN was intimately related to binary,
 it looks like ColS is in turn intimiately related to dyadic rational.
 All the terms are of the form `a/2^b`.
 
+A closer look at the equational solutions show something odd.
+The equational form of the ColS expression quite quicly is able to generate non-whole numbers.
+Let's look at the first example, where we've gone `3 ↦ 10 ↦ 5`.
+-/
 
+def le_5 : LinEq ℚ := { m := (3 : Rat)/2, c := (1 : Rat)/2 }
+
+#eval le_5.eval 0
+#eval le_5.eval 1
+#eval le_5.eval 2
+#eval le_5.eval 3
+
+/-!
+We can see that every even-numbered solutino is not a whole number.
+The reason for this is that we applied the `down` step at 10 
 -/
